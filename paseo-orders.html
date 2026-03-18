@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>פסאו — הזמנות ספקים</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="הזמנות">
+<meta name="theme-color" content="#0C0C0E">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔶</text></svg>">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0C0C0E;--card:#1A1A1F;--card-active:#22222A;--border:#2A2A33;--text:#E8E8EC;--dim:#7A7A88;--accent:#C4A265;--accent-dim:rgba(196,162,101,0.15);--green:#4ADE80}
+body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden}
+
+/* === INDEX VIEW === */
+#indexView{padding:16px 12px 40px}
+#indexView h1{font-size:26px;font-weight:900;color:var(--accent);text-align:center;margin:20px 0 4px}
+.idx-sub{text-align:center;color:var(--dim);font-size:13px;margin-bottom:24px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:all .15s}
+.card:active{transform:scale(.97);border-color:var(--accent)}
+.card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.card-emoji{font-size:28px}
+.card-count{font-size:11px;color:var(--dim);background:#22222A;padding:2px 8px;border-radius:8px}
+.card-name{font-size:16px;font-weight:700;margin-bottom:2px}
+.card-meta{font-size:11px;color:var(--dim);line-height:1.4;min-height:16px}
+
+/* === SUPPLIER VIEW === */
+#supplierView{display:none;padding-bottom:140px}
+.header{position:sticky;top:0;z-index:100;background:linear-gradient(to bottom,var(--bg) 80%,transparent);padding:16px 16px 24px}
+.header h1{font-size:22px;font-weight:900;color:var(--accent);letter-spacing:-.5px}
+.header .sub{font-size:13px;color:var(--dim);margin-top:2px}
+.back{display:inline-flex;align-items:center;gap:4px;color:var(--dim);font-size:13px;cursor:pointer;margin-bottom:6px;background:none;border:none;font-family:'Heebo',sans-serif;padding:4px 0}
+.back:active{color:var(--accent)}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);padding:12px 16px 6px}
+.items{padding:0 10px}
+.item{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:6px;transition:all .15s;cursor:pointer;user-select:none}
+.item.active{background:var(--card-active);border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),inset 0 0 12px var(--accent-dim)}
+.item-info h3{font-size:15px;font-weight:700;line-height:1.3}
+.item-info .price{font-size:12px;color:var(--dim);margin-top:1px}
+.qty-control{display:none;align-items:center;direction:ltr}
+.item.active .qty-control{display:flex}
+.qty-btn{width:38px;height:38px;border:1px solid var(--border);background:var(--card);color:var(--accent);font-size:20px;font-weight:700;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .1s}
+.qty-btn:active{background:var(--accent-dim);transform:scale(.92)}
+.qty-value{width:44px;text-align:center;font-size:20px;font-weight:900;color:var(--accent);background:none;border:none;font-family:'Heebo',sans-serif;-moz-appearance:textfield}
+.qty-value::-webkit-inner-spin-button,.qty-value::-webkit-outer-spin-button{-webkit-appearance:none}
+
+/* === BOTTOM BAR === */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(to top,var(--bg) 60%,transparent);padding:20px 16px calc(env(safe-area-inset-bottom,12px) + 12px);z-index:200;display:none}
+.summary{font-size:13px;color:var(--dim);text-align:center;margin-bottom:10px}
+.summary strong{color:var(--accent);font-size:16px}
+.btn-row{display:flex;gap:8px}
+.btn{flex:1;padding:14px;border-radius:12px;border:none;font-family:'Heebo',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .15s}
+.btn:active{transform:scale(.97)}
+.btn-wa{background:#25D366;color:#fff;flex:2}
+.btn-cp{background:var(--card);color:var(--text);border:1px solid var(--border);flex:1}
+.btn-reset{background:none;border:1px solid var(--border);color:var(--dim);font-size:13px;padding:8px 14px;border-radius:8px;cursor:pointer;margin:10px auto 0;display:block}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--green);color:#000;padding:10px 20px;border-radius:10px;font-size:14px;font-weight:700;z-index:999;transition:transform .3s;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div id="indexView"></div>
+<div id="supplierView">
+  <div class="header">
+    <button class="back" onclick="goHome()">← כל הספקים</button>
+    <h1 id="svTitle"></h1>
+    <div class="sub" id="svSub"></div>
+  </div>
+  <div id="svItems"></div>
+</div>
+<div class="bottom-bar" id="bottomBar">
+  <div class="summary" id="summary">סמן פריטים להזמנה</div>
+  <div class="btn-row">
+    <button class="btn btn-wa" onclick="sendWA()">📲 שלח בוואטסאפ</button>
+    <button class="btn btn-cp" onclick="copyOrder()">העתק</button>
+  </div>
+  <button class="btn-reset" onclick="resetOrder()">אפס הכל</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const S=[
+{n:"דיפ שיווק",e:"🥫",ph:"972508873009",ct:"אליאור",d:"שני, רביעי עד 13:00",sec:[
+{l:"פריטים קבועים",it:[
+{p:"צ׳יפס תפוגן 2.5 ק\"ג",u:"שקית",par:17,pr:23.9},
+{p:"מיונז הלמנס 3.44 ק\"ג",u:"יח׳",par:3,pr:68.15},
+{p:"שמן קנולה 16 ק\"ג",u:"יח׳",par:2,pr:112},
+{p:"שמן זית ספרדי 3L",u:"יח׳",par:3,pr:89},
+{p:"טמפורה 1 ק\"ג",u:"יח׳",par:6,pr:10.9},
+{p:"פנקו יפני 1 ק\"ג",u:"יח׳",par:6,pr:11.5},
+{p:"קטשופ היינץ 13 ק\"ג",u:"יח׳",par:1,pr:135},
+{p:"עגבניות מקולפות A9",u:"יח׳",par:4,pr:18.5},
+{p:"קרם בלסמי דיפלומט",u:"יח׳",par:4,pr:12.95},
+{p:"חומוס A2",u:"יח׳",par:10,pr:3.6},
+{p:"צלפים 350 גרם",u:"יח׳",par:7,pr:8},
+{p:"טחינה 17 ק\"ג",u:"יח׳",par:1,pr:299},
+]},{l:"שמנים ותבלינים",it:[
+{p:"שמן סויה 16 ק\"ג",u:"יח׳",par:2,pr:114.9},
+{p:"שמן כמהין 250 מ\"ל",u:"יח׳",par:3,pr:29},
+{p:"חומץ יין לבן",u:"יח׳",par:2,pr:36},
+{p:"חומץ תפוחים 1L",u:"יח׳",par:7,pr:6.9},
+{p:"סוכר 1 ק\"ג",u:"יח׳",par:22,pr:4.45},
+{p:"דבש",u:"יח׳",par:1,pr:43.5},
+{p:"סילאן 5 ק\"ג",u:"יח׳",par:2,pr:36.95},
+{p:"מלח 1 ק\"ג",u:"יח׳",par:7,pr:1.69},
+{p:"פלפל שחור גרוס",u:"יח׳",par:2,pr:33},
+{p:"שומשום לבן 1 ק\"ג",u:"יח׳",par:2,pr:16},
+{p:"שומשום שחור 1 ק\"ג",u:"יח׳",par:2,pr:24},
+]},{l:"שונות",it:[
+{p:"מיונז כחול 5 ק\"ג",u:"יח׳",par:3,pr:51.9},
+{p:"טורטייה 30 ס\"מ",u:"יח׳",par:3,pr:39},
+{p:"לייצ׳י A2",u:"יח׳",par:7,pr:7.9},
+{p:"אנשובי",u:"יח׳",par:6,pr:5.2},
+{p:"פאני פורי",u:"יח׳",par:4,pr:70},
+{p:"פקאן סיני 1 ק\"ג",u:"יח׳",par:5,pr:63},
+{p:"זיתים קלמטה 10 ק\"ג",u:"יח׳",par:6,pr:23.5},
+{p:"טונה פאוץ 1 ק\"ג",u:"יח׳",par:7,pr:22.9},
+]}]},
+{n:"מרינה (ירקות)",e:"🥒",ph:"972526690711",ct:"ראוף",d:"כל יום עד 21:00",sec:[
+{l:"עלים וחסות",it:[
+{p:"לבבות קיסר",u:"יח׳",par:11,pr:6.75},
+{p:"חסה סלטובה",u:"יח׳",par:9,pr:7.25},
+{p:"חסה ליק",u:"יח׳",par:13,pr:7.25},
+{p:"עליי רוקט",u:"יח׳",par:3,pr:10},
+{p:"תרד",u:"יח׳",par:2,pr:8},
+{p:"עליי בייבי",u:"יח׳",par:3,pr:12},
+{p:"אנדיב",u:"יח׳",par:2,pr:15},
+]},{l:"ירקות",it:[
+{p:"שרי אדום",u:"ק\"ג",par:5,pr:16},
+{p:"שרי צהוב",u:"ק\"ג",par:5,pr:16},
+{p:"עגבניה חממה",u:"ק\"ג",par:7,pr:8},
+{p:"בצל ירוק",u:"יח׳",par:8,pr:2.4},
+{p:"בצל אדום שק",u:"שק",par:1,pr:70},
+{p:"חציל",u:"ק\"ג",par:5,pr:7.5},
+{p:"תירס",u:"ק\"ג",par:6,pr:6.25},
+{p:"כרובית",u:"ק\"ג",par:3,pr:12},
+{p:"דלעת",u:"ק\"ג",par:3,pr:8},
+{p:"תפוח אדמה",u:"ק\"ג",par:5,pr:5},
+{p:"בטטה",u:"ק\"ג",par:3,pr:8},
+{p:"מלפפון",u:"ק\"ג",par:2,pr:6},
+{p:"גזר",u:"ק\"ג",par:3,pr:5},
+{p:"גזר צבעוני",u:"ק\"ג",par:2,pr:12},
+{p:"סלק מבושל",u:"יח׳",par:2,pr:10},
+{p:"אבוקדו",u:"יח׳",par:5,pr:8},
+]},{l:"עשבי תיבול ופירות",it:[
+{p:"בזיליקום",u:"יח׳",par:3,pr:5},
+{p:"נענע",u:"יח׳",par:3,pr:4},
+{p:"כוסברה",u:"יח׳",par:2,pr:4},
+{p:"רוזמרין",u:"יח׳",par:1,pr:4},
+{p:"טימין",u:"יח׳",par:1,pr:4},
+{p:"לימון ארגז",u:"ארגז",par:1,pr:50},
+{p:"אוכמניות",u:"יח׳",par:2,pr:20},
+{p:"תפוז",u:"ק\"ג",par:2,pr:6},
+{p:"בננה",u:"ק\"ג",par:1,pr:6},
+{p:"תפוח",u:"ק\"ג",par:2,pr:8},
+]},{l:"פטריות וחריפים",it:[
+{p:"פטריות שמפיניון",u:"ק\"ג",par:3,pr:18},
+{p:"פטריות פורטובלו",u:"ק\"ג",par:2,pr:25},
+{p:"שום ארגז",u:"ארגז",par:1,pr:40},
+{p:"צ׳ילי אדום",u:"יח׳",par:2,pr:15},
+{p:"צ׳ילי ירוק",u:"יח׳",par:2,pr:15},
+{p:"גמבות טינקרבל",u:"יח׳",par:1,pr:20},
+]}]},
+{n:"גינדי",e:"🥩",ph:"972509490011",ct:"",d:"שני, רביעי, מוצ״ש עד 17:00",sec:[
+{l:"בשרים",it:[
+{p:"פרגית",u:"ק\"ג",par:8,pr:32},
+{p:"קרפצ׳ו",u:"ארגז",par:2,pr:120},
+{p:"אנטריקוט",u:"ארגז",par:1,pr:110},
+]}]},
+{n:"צ.י. שיווק",e:"🧀",ph:"972524817133",ct:"אופיר",d:"כל יום עד 20:00",sec:[
+{l:"חלב וגבינות",it:[
+{p:"חלב 3% 1L",u:"יח׳",par:7,pr:5.6},
+{p:"שמנת מתוקה 42% 2L",u:"יח׳",par:7,pr:46.59},
+{p:"שמנת חמוצה 200g ערבה",u:"יח׳",par:10,pr:4.01},
+{p:"שמנת טבע 30% 2ק\"ג",u:"יח׳",par:2,pr:45.63},
+{p:"חלב סויה 1L",u:"יח׳",par:4,pr:9.05},
+{p:"ביצים L",u:"יח׳",par:8,pr:31.5},
+{p:"מוצרלה מגוררת 3 ק\"ג",u:"יח׳",par:3,pr:110.25},
+{p:"מוצרלה במים 2 ק\"ג",u:"יח׳",par:2,pr:107.78},
+{p:"גאודה פרוס",u:"יח׳",par:1,pr:55},
+{p:"צדר פרוס",u:"יח׳",par:1,pr:48},
+{p:"חמאה בלגית 6 ק\"ג",u:"יח׳",par:1,pr:186},
+{p:"פיטה פת 3 ק\"ג",u:"יח׳",par:3,pr:80},
+{p:"פרמזן פדנו שמינית",u:"ק\"ג",par:5,pr:65},
+{p:"מסקרפונה חבור 2 ק\"ג",u:"יח׳",par:2,pr:74.57},
+{p:"פטה מח 3 ק\"ג",u:"יח׳",par:3,pr:80},
+{p:"לאבנה ראמה 2 ק\"ג",u:"יח׳",par:2,pr:42},
+{p:"יוגורט יווני 1L",u:"יח׳",par:2,pr:18.9},
+]}]},
+{n:"דולצי",e:"🍰",ph:"",ct:"",d:"רביעי עד 10:00 → חמישי",sec:[
+{l:"קינוחים",it:[
+{p:"ברולה",u:"יח׳",par:11,pr:0},
+{p:"טירמיסו (9 יח׳)",u:"אריזה",par:1,pr:121.5},
+{p:"קוקיז",u:"יח׳",par:11,pr:0},
+{p:"פרלינה טבעוני",u:"יח׳",par:6,pr:0},
+{p:"קראמבל",u:"יח׳",par:6,pr:0},
+{p:"גלידה וניל",u:"יח׳",par:1,pr:90},
+]}]},
+{n:"בנדיקט",e:"🍞",ph:"972528923403",ct:"רועי",d:"ראשון, שלישי עד 12:30 (Restigo)",sec:[
+{l:"לחמים",it:[
+{p:"פוקצ׳ה",u:"יח׳",par:11,pr:0},
+{p:"קרואסון פרצל",u:"יח׳",par:2,pr:0},
+{p:"המבורגר בריוש",u:"יח׳",par:3,pr:0},
+{p:"לחמנית דלעת תירס",u:"יח׳",par:1,pr:0},
+]}]},
+{n:"ריקו",e:"🍝",ph:"",ct:"",d:"חמישי, שלישי → ראשון, רביעי (אפליקציה)",sec:[
+{l:"פסטות",it:[
+{p:"פטוצ׳יני",u:"יח׳",par:3,pr:0},
+{p:"פפרדלה",u:"יח׳",par:3,pr:0},
+{p:"ספגטי",u:"יח׳",par:3,pr:0},
+{p:"טורטליני",u:"יח׳",par:2,pr:0},
+]}]},
+{n:"אוריה",e:"🍔",ph:"",ct:"",d:"",sec:[
+{l:"בשרים",it:[
+{p:"המבורגר",u:"יח׳",par:3,pr:0},
+]}]},
+{n:"תנובה",e:"🐟",ph:"972544441686",ct:"יולין",d:"שלישי → רביעי",sec:[
+{l:"דגים",it:[
+{p:"דג טמפורה",u:"ק\"ג",par:22,pr:36},
+]}]},
+{n:"קנה דג",e:"🐠",ph:"972505282857",ct:"שמעון",d:"2-3x בשבוע",sec:[
+{l:"דגים טריים",it:[
+{p:"פילה סלמון טרי",u:"ק\"ג",par:1.4,pr:65},
+{p:"פילה לברק טרי",u:"ק\"ג",par:0.9,pr:110},
+{p:"פילה דניס טרי",u:"ק\"ג",par:1,pr:100},
+]}]},
+{n:"לחמא",e:"🍕",ph:"",ct:"קובי/דוד",d:"ראשון, רביעי עד 14:00 (אתר)",sec:[
+{l:"בצקים",it:[
+{p:"בסיס פיצה 20/30",u:"אריזה",par:4,pr:146.6},
+]}]},
+{n:"הכרם",e:"🍷",ph:"",ct:"",d:"",sec:[
+{l:"משקאות",it:[
+{p:"ג׳ין ביפטר",u:"יח׳",par:2,pr:45},
+{p:"בידו קרסטנו",u:"יח׳",par:3,pr:42},
+{p:"קלווה ענבית",u:"יח׳",par:2,pr:89},
+]}]},
+{n:"CBC",e:"🥤",ph:"",ct:"",d:"",sec:[
+{l:"משקאות",it:[
+{p:"אפרול 1000 מ\"ל",u:"יח׳",par:7,pr:0},
+{p:"קמפרי 1000 מ\"ל",u:"יח׳",par:1,pr:0},
+{p:"ג׳וני ווקר שחור",u:"יח׳",par:2,pr:0},
+{p:"קוקה קולה 350",u:"ארגז",par:3,pr:0},
+{p:"ספרייט ZERO 350",u:"ארגז",par:4,pr:0},
+]}]},
+{n:"צור",e:"🍾",ph:"",ct:"ירין",d:"",sec:[
+{l:"יינות",it:[
+{p:"שרדונה",u:"בקבוק",par:14,pr:19.8},
+{p:"קברנה סוביניון",u:"בקבוק",par:3,pr:19.8},
+]}]},
+{n:"אספיריט",e:"🍷",ph:"",ct:"תמיר",d:"",sec:[
+{l:"יינות",it:[
+{p:"אלבר בישו שבלי 750",u:"בקבוק",par:13,pr:51},
+{p:"לה פיאצה בלו גוורץ",u:"בקבוק",par:7,pr:20.5},
+{p:"וויספרינג אנגל 750",u:"בקבוק",par:6,pr:65},
+]}]},
+{n:"אקרמן",e:"🥃",ph:"",ct:"איתי",d:"",sec:[
+{l:"אלכוהול",it:[
+{p:"פטרון סילבר 700",u:"בקבוק",par:2,pr:154},
+{p:"מקאלן 12 שנים",u:"בקבוק",par:1,pr:263.61},
+{p:"סו ג׳ין 700",u:"בקבוק",par:3,pr:146.9},
+]}]},
+{n:"מילניום",e:"🍽️",ph:"",ct:"",d:"",sec:[
+{l:"כלים",it:[
+{p:"צלחת 20 סמ",u:"יח׳",par:20,pr:17.45},
+{p:"צלחת עמוקה 25 סמ",u:"יח׳",par:10,pr:43.9},
+]}]},
+{n:"ארגל",e:"🏺",ph:"",ct:"",d:"",sec:[
+{l:"כלים",it:[
+{p:"צלחת אובל RAK",u:"יח׳",par:7,pr:56.8},
+]}]},
+];
+
+let curS = null;
+const state = {};
+
+function countItems(s) { return s.sec.reduce((a,c) => a + c.it.length, 0); }
+
+function renderIndex() {
+  document.getElementById('supplierView').style.display = 'none';
+  document.getElementById('bottomBar').style.display = 'none';
+  const v = document.getElementById('indexView');
+  v.style.display = '';
+  let h = '<h1>🔶 הזמנות פסאו</h1><div class="idx-sub">'+S.length+' ספקים · בחר ספק להזמנה</div><div class="grid">';
+  S.forEach((s,i) => {
+    const cnt = countItems(s);
+    const meta = [s.d, s.ct].filter(Boolean).join(' · ');
+    h += '<div class="card" onclick="openSupplier('+i+')"><div class="card-top"><span class="card-emoji">'+s.e+'</span><span class="card-count">'+cnt+' פריטים</span></div><div class="card-name">'+s.n+'</div><div class="card-meta">'+meta+'</div></div>';
+  });
+  h += '</div>';
+  v.innerHTML = h;
+}
+
+function openSupplier(i) {
+  curS = i;
+  const s = S[i];
+  document.getElementById('indexView').style.display = 'none';
+  document.getElementById('supplierView').style.display = '';
+  document.getElementById('bottomBar').style.display = '';
+  document.getElementById('svTitle').textContent = s.e + ' ' + s.n;
+  const meta = [s.ct, s.d ? '📅 '+s.d : ''].filter(Boolean).join(' · ');
+  document.getElementById('svSub').textContent = meta || 'לחץ על פריט לסמן, בחר כמות, שלח';
+  renderItems();
+  window.scrollTo(0,0);
+}
+
+function goHome() {
+  curS = null;
+  renderIndex();
+  window.scrollTo(0,0);
+}
+
+function key(si, ii) { return curS+'-'+si+'-'+ii; }
+function getIt(si,ii) { return S[curS].sec[si].it[ii]; }
+
+function renderItems() {
+  const s = S[curS];
+  let h = '';
+  s.sec.forEach((sec,si) => {
+    h += '<div class="section-label">'+sec.l+'</div><div class="items">';
+    sec.it.forEach((it,ii) => {
+      const k = key(si,ii);
+      const st = state[k] || {a:false, q:it.par};
+      const pr = it.pr > 0 ? it.pr.toFixed(2)+'₪ / '+it.u : it.u;
+      h += '<div class="item'+(st.a?' active':'')+'" onclick="toggle('+si+','+ii+',event)"><div class="item-info"><h3>'+it.p+'</h3><div class="price">'+pr+'</div></div><div class="qty-control" onclick="event.stopPropagation()"><button class="qty-btn" onclick="chg('+si+','+ii+',-1)">−</button><input class="qty-value" type="number" value="'+st.q+'" min="0" max="99" onchange="setQ('+si+','+ii+',this.value)" onfocus="this.select()"><button class="qty-btn" onclick="chg('+si+','+ii+',1)">+</button></div></div>';
+    });
+    h += '</div>';
+  });
+  document.getElementById('svItems').innerHTML = h;
+  updSum();
+}
+
+function toggle(si,ii,e) {
+  if (e.target.closest('.qty-control')) return;
+  const k = key(si,ii), it = getIt(si,ii);
+  if (!state[k]) state[k] = {a:false, q:it.par};
+  state[k].a = !state[k].a;
+  renderItems();
+}
+
+function chg(si,ii,d) {
+  const k = key(si,ii);
+  if (!state[k]) return;
+  state[k].q = Math.max(0, Math.min(99, state[k].q + d));
+  if (state[k].q === 0) state[k].a = false;
+  renderItems();
+}
+
+function setQ(si,ii,v) {
+  const k = key(si,ii);
+  if (!state[k]) return;
+  state[k].q = Math.max(0, Math.min(99, parseInt(v)||0));
+  if (state[k].q === 0) state[k].a = false;
+  renderItems();
+}
+
+function getLines() {
+  if (curS === null) return {lines:[], total:0};
+  const s = S[curS]; let lines=[], total=0;
+  s.sec.forEach((sec,si) => {
+    sec.it.forEach((it,ii) => {
+      const k = key(si,ii), st = state[k];
+      if (st && st.a && st.q > 0) {
+        const lt = it.pr * st.q;
+        total += lt;
+        lines.push({name:it.p, qty:st.q, unit:it.u, price:it.pr, lt});
+      }
+    });
+  });
+  return {lines, total};
+}
+
+function updSum() {
+  const {lines, total} = getLines();
+  const el = document.getElementById('summary');
+  if (!lines.length) el.innerHTML = 'סמן פריטים להזמנה';
+  else el.innerHTML = lines.length+' פריטים &middot; סה״כ משוער: <strong>'+total.toFixed(0)+'₪</strong>';
+}
+
+function buildTxt() {
+  const {lines, total} = getLines();
+  if (!lines.length) return null;
+  const d = new Date(), ds = d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
+  let t = '🔶 הזמנה '+S[curS].n+' — '+ds+'\n\n';
+  lines.forEach(l => t += '• '+l.name+' × '+l.qty+'\n');
+  t += '\nסה״כ משוער: '+total.toFixed(0)+'₪ לפני מע״מ';
+  return t;
+}
+
+function sendWA() {
+  const t = buildTxt();
+  if (!t) return toast('סמן לפחות פריט אחד');
+  const enc = encodeURIComponent(t);
+  const ph = S[curS].ph;
+  window.open(ph ? 'https://wa.me/'+ph+'?text='+enc : 'https://wa.me/?text='+enc, '_blank');
+}
+
+function copyOrder() {
+  const t = buildTxt();
+  if (!t) return toast('סמן לפחות פריט אחד');
+  navigator.clipboard.writeText(t).then(() => toast('הועתק ✓'));
+}
+
+function resetOrder() {
+  if (curS === null) return;
+  const s = S[curS];
+  s.sec.forEach((sec,si) => sec.it.forEach((_,ii) => delete state[key(si,ii)]));
+  renderItems();
+  toast('אופס');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+renderIndex();
+</script>
+</body>
+</html>
