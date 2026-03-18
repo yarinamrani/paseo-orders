@@ -284,7 +284,7 @@ function renderIndex() {
   document.getElementById('supplierView').style.display = 'none';
   document.getElementById('bottomBar').style.display = 'none';
   const v = document.getElementById('indexView');
-  v.style.display = '';
+  v.style.display = 'block';
   let h = '<h1>🔶 הזמנות פסאו</h1><div class="idx-sub">'+S.length+' ספקים · בחר ספק להזמנה</div><div class="grid">';
   S.forEach((s,i) => {
     const cnt = countItems(s);
@@ -299,8 +299,8 @@ function openSupplier(i) {
   curS = i;
   const s = S[i];
   document.getElementById('indexView').style.display = 'none';
-  document.getElementById('supplierView').style.display = '';
-  document.getElementById('bottomBar').style.display = '';
+  document.getElementById('supplierView').style.display = 'block';
+  document.getElementById('bottomBar').style.display = 'block';
   document.getElementById('svTitle').textContent = s.e + ' ' + s.n;
   const meta = [s.ct, s.d ? '📅 '+s.d : ''].filter(Boolean).join(' · ');
   document.getElementById('svSub').textContent = meta || 'לחץ על פריט לסמן, בחר כמות, שלח';
